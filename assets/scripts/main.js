@@ -51,7 +51,7 @@ function initializeServiceWorker() {
     {
       try
       {
-        const registerWorker = await navigator.serviceWorker.register('./sw.js', {scope: '/'});
+        const registerWorker = await navigator.serviceWorker.register('./sw.js', {scope: './'});
         if(registerWorker.active)
         {
           console.log('The service worker has been successfully registered!');
