@@ -45,6 +45,24 @@ function initializeServiceWorker() {
   // We first must register our ServiceWorker here before any of the code in
   // sw.js is executed.
   // B1. TODO - Check if 'serviceWorker' is supported in the current browser
+  if('serviceWorker' in navigator)
+  {
+    window.addEventListener('load', async () => 
+    {
+      try
+      {
+        const registerWorker = await navigator.serviceWorker.register('./sw.js', {scope: '/'});
+        if(registerWorker.active)
+        {
+          console.log('The service worker has been successfully registered!');
+        }
+      }
+      catch (error)
+      {
+        console.log(`The service worker registration has failed with error ${error}.`);
+      }
+    })
+  }
   // B2. TODO - Listen for the 'load' event on the window object.
   // Steps B3-B6 will be *inside* the event listener's function created in B2
   // B3. TODO - Register './sw.js' as a service worker (The MDN article
@@ -68,15 +86,49 @@ async function getRecipes() {
   // EXPOSE - START (All expose numbers start with A)
   // A1. TODO - Check local storage to see if there are any recipes.
   //            If there are recipes, return them.
+  const recipes = JSON.parse(localStorage.getItem('recipes'));
+  if(recipes != null)
+  {
+    if(recipes.length > 0)
+    {
+      return recipes;
+    }
+  }
   /**************************/
   // The rest of this method will be concerned with requesting the recipes
   // from the network
   // A2. TODO - Create an empty array to hold the recipes that you will fetch
+  const recipeList = [];
   // A3. TODO - Return a new Promise. If you are unfamiliar with promises, MDN
   //            has a great article on them. A promise takes one parameter - A
   //            function (we call these callback functions). That function will
   //            take two parameters - resolve, and reject. These are functions
   //            you can call to either resolve the Promise or Reject it.
+  return new Promise(async (resolve, reject) => 
+  {
+    for(let count = 0; count < RECIPE_URLS.length; count++)
+    {
+      try 
+      {
+        const getRecipe = await fetch(RECIPE_URLS[count]);
+        const recipeContent = await getRecipe.json();
+        recipeList.push(recipeContent);
+        if(count == RECIPE_URLS.length - 1)
+        {
+          saveRecipesToStorage(recipeList);
+          resolve(recipeList);
+        }
+      } 
+      catch (error) 
+      {
+        if(error)
+        {
+          console.log(error);
+          reject(error);
+        }
+      }
+    }
+  })
   /**************************/
   // A4-A11 will all be *inside* the callback function we passed to the Promise
   // we're returning
